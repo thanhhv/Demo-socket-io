@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Socket.IO Go Client</title>
+</head>
+<body>
+  <h3>Socket.IO Client Test</h3>
+
+  <button onclick="sendNotice()">Send Notice</button>
+  <button onclick="sendChat()">Send Chat</button>
+  <button onclick="sendBye()">Send Bye</button>
+
+  <pre id="log"></pre>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.8/socket.io.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+
+
+  <script>
+    const logBox = document.getElementById("log");
+    function log(msg) {
+      logBox.textContent += msg + "\n";
+    }
+
+    // Connect to default namespace "/"
+    const socket = io("http://localhost:8000", {
+      transports: ["websocket"]
+    });
+
+    socket.on("connect", () => {
+      log("✅ Connected: " + socket.id);
+      socket.emit("notice", "hello server");
+    });
+
+    socket.on("reply", (msg) => {
+      log("📩 reply: " + msg);
+    });
+
+    socket.on("bye", (msg) => {
+      log("👋 server bye: " + msg);
+    });
+
+    socket.on("disconnect", (reason) => {
+      log("❌ Disconnected: " + reason);
+    });
+
+    // Buttons
+    function sendNotice() {
+      log("➡️ emit notice");
+      socket.emit("notice", "from client");
+    }
+
+    function sendChat() {
+      log("➡️ emit chat msg to /chat namespace");
+      // connect to /chat namespace and send msg
+      const chat = io("http://localhost:8000/chat");
+
+      chat.on("connect", () => {
+        chat.emit("msg", "hello chat room");
+      });
+
+      chat.on("msg", (resp) => {
+        log("💬 chat reply: " + resp);
+      });
+    }
+
+    function sendBye() {
+      log("➡️ emit bye");
+      socket.emit("bye");
+    }
+  </script>
+</body>
+</html>
